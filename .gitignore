@@ -105,3 +105,6 @@ venv.bak/
 
 # Chip8 Games
 *.ch8
+
+# MacOS
+.DS_Store
