@@ -1,6 +1,7 @@
 class Display():
     def __init__(self):
         self._display = [False for x in range(2048)]
+        self.draw_screen = True
         self._length = 2048
     
     def __getitem__(self, index):

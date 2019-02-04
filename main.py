@@ -16,7 +16,8 @@ with open(sys.argv[1], "rb") as gamefile:
 def processor_cycle(dt):
   processor.execute_cycle()
   # Debug code
-  processor.check_integrity()
+  if not processor.check_integrity():
+    print("Failed integrity check!")
 
 def counter_cycle(dt):
   processor.delay_timer.tick()

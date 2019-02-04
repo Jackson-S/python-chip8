@@ -8,14 +8,14 @@ class Display(pyglet.window.Window):
     
     def on_draw(self):
         self.clear()
-        if self.processor.draw_screen:
+        if self.processor.display.draw_screen:
             if self.previous_frame:
                 self.previous_frame.delete()
             sprite = self.create_sprite()
             sprite.update(x=0, y=self.height, scale = self.width // 64, scale_y=-1)
             self.previous_frame = sprite
             sprite.draw()
-            self.processor.draw_screen = False
+            self.processor.display.draw_screen = False
         else:
             self.previous_frame.draw()
             

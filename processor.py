@@ -17,7 +17,6 @@ class Processor():
         self.delay_timer = Timer()
         self.sound_timer = Timer()
         self.display = Display()
-        self.draw_screen = True
         self.last_keypress = None
         
         # Load in rom code
@@ -53,10 +52,14 @@ class Processor():
     def check_integrity(self):
         for r in self.register:
             if type(r) != Byte:
+                print("Register type error: ", type(r))
                 return False
             if type(r.value) != int:
+                print("Register value type error: ", type(r.value))
                 return False
         for m in self.memory:
             if type(m) != Byte:
+                print("Memory type error: ", type(m))
                 return False
+        return True
         
