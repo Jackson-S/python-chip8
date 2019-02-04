@@ -50,13 +50,34 @@ class Chip8Byte():
             return Chip8Byte(self.value | other)
     
     def __gt__(self, other):
-        return self.__cmp__(other)
-
-    def __cmp__(self, other):
         if type(other) == Chip8Byte:
-            return other.value - self.value
-        else:
-            return Chip8Byte(other).value - self.value
+            return self.value > other.value
+        return self.value > other
+
+    def __eq__(self, other):
+        if type(other) == Chip8Byte:
+            return self.value == other.value
+        return self.value == other
+    
+    def __ge__(self, other):
+        if type(other) == Chip8Byte:
+            return self.value >= other.value
+        return self.value >= other
+    
+    def __lt__(self, other):
+        if type(other) == Chip8Byte:
+            return self.value < other.value
+        return self.value < other
+    
+    def __le__(self, other):
+        if type(other) == Chip8Byte:
+            return self.value <= other.value
+        return self.value <= other
+    
+    def __ne__(self, other):
+        if type(other) == Chip8Byte:
+            return self.value != other.value
+        return self.value != other
     
     def join(self, low):
         return self.value << 8 | low.value

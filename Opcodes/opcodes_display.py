@@ -1,5 +1,5 @@
 def op_display_clear(processor, *args):
-    processor.display.clear_screen()
+    processor.display.clear()
     processor.draw_screen = True
     processor.program_counter += 2
 
@@ -11,18 +11,15 @@ def op_draw(processor, *args):
     processor.register[0xF].value = 0
 
     for y in range(height):
-        pixel = processor.memory[processor.immediate + y].value
-        for x in range(8):
-            if pixel & (0x80 >> x) != 0:
-                position = (x_pos + x + (y_pos + y) * 64)
-
-                if position < len(processor.display):
-                    if processor.display.get_pixel(x_pos + x, y_pos + y) != True:
-                        processor.register[0xF].value = 1
-                    
-                    value = processor.display.get_pixel(x_pos + x, y_pos + y) ^ True
-
-                    processor.display.set_pixel(x_pos + x, y_pos + y, value)
+        # Get the str rep. of the sprite binary (eg 0b1000110) and remove '0b'
+        sprite_line = bin(processor.memory[processor.immediate + y].value)[2:]
+        for x, pixel in enumerate(sprite_line):
+            position = x_pos + x, y_pos + y
+            
+            new_pixel = processor.display[position] ^ int(pixel)
+            
+            processor.register[0xF].value = int(new_pixel)
+            processor.display[position] = new_pixel
     
     processor.draw_screen = True
     processor.program_counter += 2

@@ -2,7 +2,7 @@ from rom import rom
 from byte import Chip8Byte as Byte
 from timer import Timer
 from display import Display
-from opcode import Opcode
+from opcode_class import Opcode
 
 class Processor():
     def __init__(self):
@@ -10,7 +10,7 @@ class Processor():
         self.key = [False] * 16
         self.memory = [Byte(0) for _ in range(4096)]
         self.program_memory = [None for _ in range(4096)]
-        self.stack = [Byte(0) for _ in range(16)]
+        self.stack = [0 for _ in range(16)]
         self.stack_pointer = 0
         self.immediate = 0
         self.program_counter = 0x200
@@ -49,7 +49,14 @@ class Processor():
         
         # Run the object
         self.program_memory[self.program_counter].run()
-
-        # Update counters
-        self.delay_timer.tick()
-        self.sound_timer.tick()
+    
+    def check_integrity(self):
+        for r in self.register:
+            if type(r) != Byte:
+                return False
+            if type(r.value) != int:
+                return False
+        for m in self.memory:
+            if type(m) != Byte:
+                return False
+        

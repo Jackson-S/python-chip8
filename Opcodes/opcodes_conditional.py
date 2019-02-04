@@ -21,3 +21,6 @@ def op_skip_if_register_not_equal_register(processor, *args):
         processor.program_counter += 4
     else:
         processor.program_counter += 2
+
+def op_skip_if_key_not_pressed(processor, *args):
+    processor.program_counter += 4
