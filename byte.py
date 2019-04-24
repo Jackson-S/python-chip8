@@ -1,7 +1,7 @@
 class Chip8Byte():
     def __init__(self, value):
         if type(value) == bytes and len(bytes) == 1:
-            self.value = int.from_bytes(value, byteorder="little")
+            self.value = int.from_bytes(value, byteorder="big")
         elif type(value) == Chip8Byte:
             self.value = value.value
         else:      

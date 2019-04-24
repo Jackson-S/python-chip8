@@ -11,13 +11,17 @@ def op_set_immediate_to_sprite_address(processor, *args):
     processor.program_counter += 2
 
 def op_memory_at_immediate_to_binary_coded_decimal(processor, *args):
-    processor.memory[processor.immediate].value = int(processor.register[args[0]].value // 100)
-    processor.memory[processor.immediate + 1].value = int((processor.register[args[0]].value / 10) % 10)
-    processor.memory[processor.immediate + 2].value = int((processor.register[args[0]].value % 100) // 1)
+    number = processor.register[args[0]].value
+    for x in reversed(range(3)):
+        # Destroy any opcode objects that may have been created
+        processor.program_memory[processor.immediate + x] = None
+        processor.memory[processor.immediate + x].value = number % 10
+        number //= 10
     processor.program_counter += 2
 
 def op_dump_registers_to_memory(processor, *args):
     for i in range(args[0] + 1):
+        processor.program_memory[processor.immediate + i] = None
         processor.memory[processor.immediate + i] = processor.register[i]
     processor.program_counter += 2
 

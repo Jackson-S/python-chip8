@@ -39,7 +39,7 @@ class Processor():
     
     def load_game(self, game):
         for x in range(len(game)):
-            self.memory[x+0x200] = Byte(game[x])
+            self.memory[0x200 + x] = Byte(game[x])
 
     def execute_cycle(self):
         # Check if there's an Opcode object already created
@@ -57,9 +57,34 @@ class Processor():
             if type(r.value) != int:
                 print("Register value type error: ", type(r.value))
                 return False
+            if r.value < 0 or r.value > 255:
+                print("Register value error: ", r.value)
+                return False
         for m in self.memory:
             if type(m) != Byte:
                 print("Memory type error: ", type(m))
                 return False
+            if m.value < 0 or m.value > 255:
+                print("Register value error: ", r.value)
+                return False
+        for p in self.display:
+            if type(p) != bool:
+                print("Pixel type error: ", type(p))
+                return False
+        for m_a, m_b, pm in zip(self.memory[::2], self.memory[1::2], self.program_memory[::2]):
+            if pm != None and m_a.join(m_b) != pm.opcode:
+                print("Progmem validity error: ", m_a.join(m_b), pm.opcode)
+                return False
+        for r, m in zip(rom, self.memory[:80]):
+            if r != m.value:
+                print("Rom validity error: ", r, m)
+                return False
+        for s in self.stack:
+            if type(s) != int:
+                print("stack type error")
+                return False
+        if type(self.immediate) != int:
+            print("Immediate type error")
+            return False
         return True
         
