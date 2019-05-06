@@ -7,7 +7,7 @@ import pyglet
 import sys
 
 processor = Processor()
-window = Display(processor)
+window = Display(processor, width=640, height=320)
 
 with open(sys.argv[1], "rb") as gamefile:
   game = gamefile.read()
