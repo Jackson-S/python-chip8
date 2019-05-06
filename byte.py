@@ -79,6 +79,9 @@ class Chip8Byte():
             return self.value != other.value
         return self.value != other
     
+    def __bool__(self):
+        return bool(self.value)
+    
     def join(self, low):
         return self.value << 8 | low.value
 

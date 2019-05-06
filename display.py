@@ -5,14 +5,18 @@ class Display():
         self._length = 2048
     
     def __getitem__(self, index):
-        if type(index) == tuple:
-            index = index[1] * 64 + index[0]
-        return self._display[index % 2048]
+        # Split the index into x and y components
+        x, y = index
+        # Only read if x and y are in bounds
+        if x < 64 and y < 32:
+            return self._display[y * 64 + x]
     
     def __setitem__(self, index, value):
-        if type(index) == tuple:
-            index = index[1] * 64 + index[0]
-        self._display[index % 2048] = value
+        # Split the index into x and y components
+        x, y = index
+        # Only write if x and y are in bounds
+        if x < 64 and y < 32:
+            self._display[y * 64 + x] = value
     
     def __iter__(self):
         index = 0

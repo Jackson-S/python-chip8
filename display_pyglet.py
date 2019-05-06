@@ -1,27 +1,31 @@
 import pyglet
+import itertools
 
 class Display(pyglet.window.Window):
     def __init__(self, processor, *args, **kwargs):
         self.processor = processor
-        self.previous_frame = None
-        super(Display, self).__init__(*args, *kwargs)
+        super(Display, self).__init__(*args, **kwargs)
     
     def on_draw(self):
-        self.clear()
-        if self.processor.display.draw_screen:
-            if self.previous_frame:
-                self.previous_frame.delete()
-            sprite = self.create_sprite()
-            sprite.update(x=0, y=self.height, scale = self.width // 64, scale_y=-1)
-            self.previous_frame = sprite
-            sprite.draw()
-            self.processor.display.draw_screen = False
-        else:
-            self.previous_frame.draw()
-            
-    
-    def create_sprite(self):
-        pixels = [int(x) * 255 for x in self.processor.display]
-        raw_data = (pyglet.gl.GLubyte * len(pixels))(*pixels)
+        texture = self.createTexture()
+
+        # Forces the sprite to be scaled nearest neighbour
+        pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, 
+                                  pyglet.gl.GL_TEXTURE_MAG_FILTER, 
+                                  pyglet.gl.GL_NEAREST)
+        # Scale the sprite to the window size
+        texture.width = self.width
+        texture.height = self.height
+
+        # Draw the texture on screen
+        texture.blit(0, 0)
+
+    def createTexture(self):
+        # Flip each row of pixels so they draw properly.
+        pixels = []
+        for x in reversed(range(0, len(self.processor.display), 64)):
+            pixels.extend(map(lambda x: int(x) * 255, self.processor.display._display[x:x+64]))
+
+        raw_data = (pyglet.gl.GLubyte * len(self.processor.display)) (*pixels)
         image_data = pyglet.image.ImageData(64, 32, 'L', raw_data)
-        return pyglet.sprite.Sprite(image_data)
+        return image_data.get_texture()
