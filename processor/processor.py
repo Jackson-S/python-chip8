@@ -1,49 +1,52 @@
-from .rom import rom
+from .rom import ROM
 from .opcode_class import Opcode
 
 class Processor():
     def __init__(self, display):
-        self.register = [0 for _ in range(16)]
-        self.key = [False] * 16
-        self.memory = [0 for _ in range(4096)]
-        self.program_memory = [None for _ in range(4096)]
-        self.stack = [0 for _ in range(16)]
-        self.stack_pointer = 0
+        self.register = [0 for _ in range(0x10)]
+        self.key = [False] * 0xF
+
+        # The raw memory for the processor.
+        self.memory = [0 for _ in range(0x1000)]
+        
+        # Contains opcode objects with pre-decoded instruction pointers 
+        # and parameters, avoiding unnecessary decoding and acting as a
+        # pseudo-dynamic re-compiler.
+        self.program_memory = [None for _ in range(0x1000)]
+
+        # Not quite standard behavior as the original stack only has 16 positions
+        # however the programs cannot directly access the stack so having infinite
+        # indices shouldn't affect any correctly written games.
+        self.stack = []
+        
         self.immediate = 0
         self.program_counter = 0x200
+
         self.delay_timer = 0
         self.sound_timer = 0
+
         self.display = display
+
         self.last_keypress = None
-        self.cycles = 0
         
-        # Load in rom code
-        for x in range(80):
-            self.memory[x] = rom[x]
+        # Loads the character set (0-F) into the memory at location 0
+        self.memory[:len(ROM)] = ROM
     
     def timer_tick(self):
         self.delay_timer = (self.delay_timer - 1) & 0xFF
         self.sound_timer = (self.sound_timer - 1) & 0xFF
     
-    def pop(self):
-        if self.stack_pointer == 0:
-            self.stack_pointer = 15
-        else:
-            self.stack_pointer -= 1
-        return self.stack[self.stack_pointer]
-    
-    def push(self, value):
-        self.stack[self.stack_pointer] = value
-        if self.stack_pointer == 15:
-            self.stack_pointer = 0
-        else:
-            self.stack_pointer += 1
-    
     def load_game(self, game):
-        for x in range(len(game)):
-            self.memory[0x200 + x] = game[x]
+        # Load the game into memory at 0x200+
+        self.memory[0x200:0x200+len(game)] = game
+        # Reset the processor state
+        self.program_counter = 0x200
+        self.immediate = 0
 
     def execute_cycle(self):
+        # Due to a quirk of how the display class works this function is only called
+        # at the game's frame-rate, which if 60fps will only update the timer at 60fps.
+        # I plan to fix this to be 60fps always.
         self.timer_tick()
         
         # Check if there's an Opcode object already created
@@ -52,8 +55,6 @@ class Processor():
         
         # Run the object
         self.program_memory[self.program_counter].run()
-
-        self.cycles += 1
     
     def check_integrity(self):
         for index, r in enumerate(self.register):
