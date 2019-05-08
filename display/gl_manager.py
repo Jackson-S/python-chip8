@@ -1,17 +1,32 @@
 import pyglet
 
-def initialize_graphics(processor):
-    # Creates the game state and window using pygame.
-    window = Display(processor, width=640, height=320)
-    # Schedule the processor to run at 600hz (slightly higher than standard, 
-    # but makes maths and timing code much easier)
-    pyglet.clock.schedule_interval(window.processor_cycle, 1/600)
-    pyglet.app.run()
+from pyglet.window import key
 
-class Display(pyglet.window.Window):
+class GlManager(pyglet.window.Window):
     def __init__(self, processor, *args, **kwargs):
         self.processor = processor
-        super(Display, self).__init__(*args, **kwargs)
+
+        # Define the keyboard layout
+        self.key_map = {
+            key._0: 0,
+            key._1: 1,
+            key._2: 2,
+            key._3: 3,
+            key._4: 4,
+            key._5: 5,
+            key._6: 6,
+            key._7: 7,
+            key._8: 8,
+            key._9: 9,
+            key.A: 10,
+            key.B: 11,
+            key.C: 12,
+            key.D: 13,
+            key.E: 14,
+            key.F: 15,
+        }
+
+        super(GlManager, self).__init__(*args, **kwargs)
     
     def on_draw(self):
         texture = self.createTexture()
@@ -40,6 +55,14 @@ class Display(pyglet.window.Window):
         image_data = pyglet.image.ImageData(64, 32, 'L', raw_data)
         # Return the texture created from the image data.
         return image_data.get_texture()
+
+    def on_key_press(self, symbol, modifiers):
+        print("Do", symbol)
+        self.processor.key[self.key_map[symbol]] = True
+    
+    def on_key_release(self, symbol, modifiers):
+        print("Up", symbol)
+        self.processor.key[self.key_map[symbol]] = False
     
     def processor_cycle(self, dt):
         # Since the minimum timer resolution is 1/60 we have to perform
@@ -51,3 +74,11 @@ class Display(pyglet.window.Window):
         # Check to ensure processor integrity
         # if not self.processor.check_integrity():
         #     print("Failed integrity check!")
+
+def initialize_graphics(processor, width=640, height=320):
+    # Creates the game state and window using pygame.
+    window = GlManager(processor, width=width, height=height)
+    # Schedule the processor to run at 600hz (slightly higher than standard, 
+    # but makes maths and timing code much easier)
+    pyglet.clock.schedule_interval(window.processor_cycle, 1/600)
+    pyglet.app.run()

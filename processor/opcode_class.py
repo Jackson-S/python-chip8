@@ -38,16 +38,15 @@ class Opcode():
         "d***": op_draw,
         "e*9e": op_skip_if_key_pressed,
         "e*a1": op_skip_if_key_not_pressed,
-        "f*07": set_register_to_delay_timer,
+        "f*07": op_set_register_to_delay_timer,
         "F*0a": op_halt_until_key_pressed,
-        "f*15": set_delay_timer_to_register,
-        "f*18": set_sound_timer_to_register,
+        "f*15": op_set_delay_timer_to_register,
+        "f*18": op_set_sound_timer_to_register,
         "f*1e": op_add_register_to_immediate,
         "f*29": op_set_immediate_to_sprite_address,
         "f*33": op_memory_at_immediate_to_binary_coded_decimal,
         "f*55": op_dump_registers_to_memory,
         "f*65": op_load_registers_from_memory,
-        "****": op_nop,
     }
 
     def __init__(self, processor, address):
@@ -80,7 +79,7 @@ class Opcode():
         # Create a list of possible opcode->self.FUNCTION_POINTERS.keys() mappings
         possible_opcode_mappings = [hex_opcode, 
                                     "{}*{}".format(hex_opcode[0], hex_opcode[2:]), 
-                                    "{}**{}".format(hex_opcode[0], hex_opcode[3]), 
+                                    "{}**{}".format(hex_opcode[0], hex_opcode[3]),
                                     "{}***".format(hex_opcode[0])]
 
         if possible_opcode_mappings[0] in self.FUNCTION_POINTERS.keys():

@@ -1,15 +1,15 @@
 # python-chip8
-A python-based Chip8 emulator
+A Python-based Chip8 emulator, with dynamic recompilation.
 
 ## Working:
  * CPU is feature complete
- * Pseudo-dynamic recompilation
- * Open-gl frontend and graphical output
+ * Dynamic recompilation
+ * Open-GL frontend and graphical output
+ * Keyboard input
 
 ## To Do:
- * Implement input
+ * Sound
  * Implement alternative instructions for certain misbehaving games.
- * Fix minor bugs
 
-## Maybe to do:
+## Maybe To Do:
  * Add chip8 colour support

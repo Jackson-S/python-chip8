@@ -3,7 +3,7 @@ from .opcode_class import Opcode
 class Processor():
     def __init__(self, display):
         self.register = [0 for _ in range(0x10)]
-        self.key = [False] * 0xF
+        self.key = [False for _ in range(0x10)]
 
         # The raw memory for the processor.
         self.memory = [0 for _ in range(0x1000)]
@@ -25,8 +25,6 @@ class Processor():
         self.sound_timer = 0
 
         self.display = display
-
-        self.last_keypress = None
     
     def timer_tick(self):
         self.delay_timer = (self.delay_timer - 1) & 0xFF
