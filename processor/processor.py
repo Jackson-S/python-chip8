@@ -1,9 +1,8 @@
-from rom import rom
-from display import Display
-from opcode_class import Opcode
+from .rom import rom
+from .opcode_class import Opcode
 
 class Processor():
-    def __init__(self):
+    def __init__(self, display):
         self.register = [0 for _ in range(16)]
         self.key = [False] * 16
         self.memory = [0 for _ in range(4096)]
@@ -14,7 +13,7 @@ class Processor():
         self.program_counter = 0x200
         self.delay_timer = 0
         self.sound_timer = 0
-        self.display = Display()
+        self.display = display
         self.last_keypress = None
         self.cycles = 0
         

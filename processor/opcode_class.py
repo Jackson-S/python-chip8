@@ -1,11 +1,11 @@
-import opcode_decoder
+from .opcode_decoder import get_function_call
 
 class Opcode():
     def __init__(self, processor, address):
         self.processor = processor
         self.address = address
         self.opcode = self._join(address)
-        pointers = opcode_decoder.decode(self.opcode)
+        pointers = get_function_call(self.opcode)
         self.function = pointers[0]
         self.parameters = pointers[1:]
     
@@ -16,7 +16,7 @@ class Opcode():
         # Check code has not been modified by running program
         if self._join(self.address) != self.opcode:
             self.opcode = self._join(self.address)
-            pointers = opcode_decoder.decode(self.opcode)
+            pointers = get_function_call(self.opcode)
             self.function = parameters[0]
             self.parameters = pointers[1:]
         
