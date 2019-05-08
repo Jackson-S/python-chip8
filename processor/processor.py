@@ -1,4 +1,3 @@
-from .rom import ROM
 from .opcode_class import Opcode
 
 class Processor():
@@ -28,13 +27,14 @@ class Processor():
         self.display = display
 
         self.last_keypress = None
-        
-        # Loads the character set (0-F) into the memory at location 0
-        self.memory[:len(ROM)] = ROM
     
     def timer_tick(self):
         self.delay_timer = (self.delay_timer - 1) & 0xFF
         self.sound_timer = (self.sound_timer - 1) & 0xFF
+    
+    def load_rom(self, rom): 
+        # Loads the character set (0-F) into the memory at location 0
+        self.memory[:len(rom)] = rom
     
     def load_game(self, game):
         # Load the game into memory at 0x200+
