@@ -2,15 +2,14 @@
 A python-based Chip8 emulator
 
 ## Working:
- * Opcode decoder working
- * Most instructions implemented
- * Some games display correctly
- * Graphical output
+ * CPU is feature complete
+ * Pseudo-dynamic recompilation
+ * Open-gl frontend and graphical output
 
 ## To Do:
- * Complete instruction set
- * Add tests
- * Debug instructions
+ * Implement input
+ * Implement alternative instructions for certain misbehaving games.
+ * Fix minor bugs
 
 ## Maybe to do:
  * Add chip8 colour support
