@@ -1,8 +1,11 @@
 class Display():
+    """ This class provides a wrapper for the display matrix,
+        it adds the ability to access indices with tuple notation (x, y)
+        and adds bounds checking.
+    """
     def __init__(self):
+        # Create a 64*32 1-bit display
         self._display = [False for x in range(2048)]
-        self.draw_screen = True
-        self._length = 2048
     
     def __getitem__(self, index):
         # Split the index into x and y components
@@ -25,7 +28,7 @@ class Display():
             index += 1
     
     def __len__(self):
-        return self._length
+        return len(self._display)
     
     def clear(self):
         self._display = [False for x in range(2048)]
