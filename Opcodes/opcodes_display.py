@@ -4,12 +4,12 @@ def op_display_clear(processor, *args):
     processor.program_counter += 2
 
 def op_draw(processor, *args):
-    x_origin = processor.register[args[0]].value % 64
-    y_origin = processor.register[args[1]].value % 32
+    x_origin = processor.register[args[0]] % 64
+    y_origin = processor.register[args[1]] % 32
     sprite_height = args[2]
 
     # Reset the flag register so that it can be changed later
-    processor.register[0xF].value = 0
+    processor.register[0xF] = 0
 
     for sprite_y in range(sprite_height):
         if (y_origin + sprite_y < 32):
@@ -30,7 +30,7 @@ def op_draw(processor, *args):
 
                     # Set the 0xF (flag) register if a pixel is unset.
                     if old_pixel == True and new_pixel == False:
-                        processor.register[0xF].value = 1
+                        processor.register[0xF] = 1
     
     # Mark that the screen should be updated.
     processor.display.draw_screen = True

@@ -3,19 +3,19 @@ def op_set_immediate_to_constant(processor, *args):
     processor.program_counter += 2
 
 def op_add_register_to_immediate(processor, *args):
-    processor.immediate += processor.register[args[0]].value
+    processor.immediate += processor.register[args[0]]
     processor.program_counter += 2
 
 def op_set_immediate_to_sprite_address(processor, *args):
-    processor.immediate = processor.register[args[0]].value * 5
+    processor.immediate = processor.register[args[0]] * 5
     processor.program_counter += 2
 
 def op_memory_at_immediate_to_binary_coded_decimal(processor, *args):
-    number = processor.register[args[0]].value
+    number = processor.register[args[0]]
     for x in reversed(range(3)):
         # Destroy any opcode objects that may have been created
         processor.program_memory[processor.immediate + x] = None
-        processor.memory[processor.immediate + x].value = number % 10
+        processor.memory[processor.immediate + x] = number % 10
         number //= 10
     processor.program_counter += 2
 

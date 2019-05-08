@@ -4,15 +4,18 @@ class Opcode():
     def __init__(self, processor, address):
         self.processor = processor
         self.address = address
-        self.opcode = processor.memory[address].join(processor.memory[address+1])
+        self.opcode = self._join(address)
         pointers = opcode_decoder.decode(self.opcode)
         self.function = pointers[0]
         self.parameters = pointers[1:]
     
+    def _join(self, address):
+        return self.processor.memory[address] << 8 | self.processor.memory[address+1]
+    
     def run(self):
         # Check code has not been modified by running program
-        if self.processor.memory[self.address].join(self.processor.memory[self.address+1]) != self.opcode:
-            self.opcode = self.processor.memory[self.address].join(self.processor.memory[self.address+1])
+        if self._join(self.address) != self.opcode:
+            self.opcode = self._join(self.address)
             pointers = opcode_decoder.decode(self.opcode)
             self.function = parameters[0]
             self.parameters = pointers[1:]
