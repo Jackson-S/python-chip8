@@ -7,6 +7,11 @@ from .opcodes.opcodes_delay import *
 from .opcodes.opcodes_input import *
 
 class Opcode():
+    """ The Opcode class acts as a container for the instruction, if the opcode
+        class is found when the processor goes to execute a memory location then
+        it will be run instead, negating the need for the processor to decode
+        previously decoded instructions.
+    """
     FUNCTION_POINTERS = {
         "00e0": op_display_clear,
         "00ee": op_return,
@@ -49,9 +54,7 @@ class Opcode():
         self.processor = processor
         self.address = address
         self.opcode = self._join(address)
-        pointers = self.get_function_call(self.opcode)
-        self.function = pointers[0]
-        self.parameters = pointers[1:]
+        self.function, self.parameters = self.get_function_call(self.opcode)
     
     def _join(self, address):
         return self.processor.memory[address] << 8 | self.processor.memory[address+1]
@@ -59,60 +62,63 @@ class Opcode():
     def run(self):
         # Check code has not been modified by running program
         if self._join(self.address) != self.opcode:
-            print("Modified!")
-            self.opcode = self._join(self.address)
-            pointers = self.get_function_call(self.opcode)
-            self.function = parameters[0]
-            self.parameters = pointers[1:]
+            # If the program is self-modifying then recreate the opcode before running
+            print("Self-modifying code detected.")
+            self.processor[self.address] = Opcode(self.processor, self.address)
+            self.processor[self.address].run()
+            return
         
-        # Run the function
         self.function(self.processor, *self.parameters)
-
-        # Output function parameters
-        # print("%.4X: %.4X (%s)" % (self.address, self.opcode, self.function.__name__), self.parameters)
 
     def get_function_call(self, opcode):
         hex_opcode = "{:04x}".format(opcode)
-        parameters = []
-        function_call = op_nop
-
-        if hex_opcode in self.FUNCTION_POINTERS.keys():
-            # Matches for functions with no parameters (00E0 - clear and 00EE - return)
-            function_call = self.FUNCTION_POINTERS[hex_opcode]
         
-        elif hex_opcode[0] + "*" + hex_opcode[2:] in self.FUNCTION_POINTERS.keys():
+        # Set up a default return type (no-op)
+        function_call = op_nop
+        parameters = []
+
+        # Create a list of possible opcode->self.FUNCTION_POINTERS.keys() mappings
+        possible_opcode_mappings = [hex_opcode, 
+                                    "{}*{}".format(hex_opcode[0], hex_opcode[2:]), 
+                                    "{}**{}".format(hex_opcode[0], hex_opcode[3]), 
+                                    "{}***".format(hex_opcode[0])]
+
+        if possible_opcode_mappings[0] in self.FUNCTION_POINTERS.keys():
+            # Matches for functions with no parameters (00E0 - clear and 00EE - return)
+            function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[0]]
+        
+        elif possible_opcode_mappings[1] in self.FUNCTION_POINTERS.keys():
+            # Replace the parameters with "*" and then get the function call from the dictionary
+            function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[1]]
+
             # Retrieve the parameter as a base-16 integer
             parameters = [int(hex_opcode[1], 16)]
-            # Replace the parameters with "*" and then get the function call from the dictionary
-            opcode_without_parameters = hex_opcode[0] + "*" + hex_opcode[2:]
-            function_call = self.FUNCTION_POINTERS[opcode_without_parameters]
         
-        elif hex_opcode[0] + "**" + hex_opcode[3] in self.FUNCTION_POINTERS.keys():
+        elif possible_opcode_mappings[2] in self.FUNCTION_POINTERS.keys():
+            # Replace the parameters with "*" and then get the function call from the dictionary
+            function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[2]]
+
             # Get the parameters from the opcode into a list
             parameters = [*map(lambda x: int(x, 16), hex_opcode[1:3])]
-            opcode_without_parameters = hex_opcode[0] + "**" + hex_opcode[3]
-            function_call = self.FUNCTION_POINTERS[opcode_without_parameters]
-            # Return the function and parameters inside a tuple
         
-        elif hex_opcode[0] + "***" in self.FUNCTION_POINTERS.keys():
-            opcode_without_parameters = hex_opcode[0] + "***"
+        elif possible_opcode_mappings[3] in self.FUNCTION_POINTERS.keys():
+            # Replace the parameters with "*" and then get the function call from the dictionary
+            function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[3]]
+            
             if hex_opcode[0] in ("1", "2", "a", "b"):
                 # Opcode like (*AAA), return the last 3 hex-values as a single parameter.
                 parameters = [int(hex_opcode[1:], 16)]
-                function_call = self.FUNCTION_POINTERS[opcode_without_parameters]
             
             elif hex_opcode[0] in ("3", "4", "6", "7", "c"):
                 # Opcode like (*ABB), return 2nd digit as one parameter, and 3,4 digits as 1 parameter.
                 parameters = [int(hex_opcode[1], 16), int(hex_opcode[2:], 16)]
-                function_call = self.FUNCTION_POINTERS[opcode_without_parameters]
             
             elif hex_opcode[0] in ("d"):
                 # Opcode like (*ABC), return each digit after first as separate parameter.
                 parameters = [*map(lambda x: int(x, 16), hex_opcode[1:])]
-                function_call = self.FUNCTION_POINTERS[opcode_without_parameters]
 
         if function_call == op_nop:
             print("NOP Generated from unknown instruction ({:04x})".format(opcode))
 
         # Return the resulting opcode
-        return (function_call, *parameters)
+        return (function_call, parameters)
