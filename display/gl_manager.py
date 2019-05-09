@@ -1,31 +1,11 @@
 import pyglet
 
-from pyglet.window import key
+from .keyboard_layout import KEY_MAP
 
 class GlManager(pyglet.window.Window):
     def __init__(self, processor, *args, **kwargs):
         self.processor = processor
-
-        # Define the keyboard layout
-        self.key_map = {
-            key._0: 0,
-            key._1: 1,
-            key._2: 2,
-            key._3: 3,
-            key._4: 4,
-            key._5: 5,
-            key._6: 6,
-            key._7: 7,
-            key._8: 8,
-            key._9: 9,
-            key.A: 10,
-            key.B: 11,
-            key.C: 12,
-            key.D: 13,
-            key.E: 14,
-            key.F: 15,
-        }
-
+        self.key_map = KEY_MAP
         super(GlManager, self).__init__(*args, **kwargs)
     
     def on_draw(self):
@@ -35,6 +15,7 @@ class GlManager(pyglet.window.Window):
         pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, 
                                   pyglet.gl.GL_TEXTURE_MAG_FILTER, 
                                   pyglet.gl.GL_NEAREST)
+        
         # Scale the sprite to the window size
         texture.width = self.width
         texture.height = self.height
@@ -57,12 +38,16 @@ class GlManager(pyglet.window.Window):
         return image_data.get_texture()
 
     def on_key_press(self, symbol, modifiers):
-        print("Do", symbol)
-        self.processor.key[self.key_map[symbol]] = True
+        try:
+            self.processor.key[self.key_map[symbol]] = True
+        except KeyError:
+            pass
     
     def on_key_release(self, symbol, modifiers):
-        print("Up", symbol)
-        self.processor.key[self.key_map[symbol]] = False
+        try:
+            self.processor.key[self.key_map[symbol]] = False
+        except KeyError:
+            pass
     
     def processor_cycle(self, dt):
         # Since the minimum timer resolution is 1/60 we have to perform
