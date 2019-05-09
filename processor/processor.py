@@ -41,12 +41,7 @@ class Processor():
         self.program_counter = 0x200
         self.immediate = 0
 
-    def execute_cycle(self):
-        # Due to a quirk of how the display class works this function is only called
-        # at the game's frame-rate, which if 60fps will only update the timer at 60fps.
-        # I plan to fix this to be 60fps always.
-        self.timer_tick()
-        
+    def execute_cycle(self):        
         # Check if there's an Opcode object already created
         if self.program_memory[self.program_counter] == None:
             self.program_memory[self.program_counter] = Opcode(self, self.program_counter)

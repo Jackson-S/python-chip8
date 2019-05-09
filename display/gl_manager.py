@@ -1,4 +1,5 @@
 import pyglet
+from pyglet.window import key
 
 from .keyboard_layout import KEY_MAP
 
@@ -7,7 +8,8 @@ class GlManager(pyglet.window.Window):
         self.processor = processor
         self.key_map = KEY_MAP
         super(GlManager, self).__init__(*args, **kwargs)
-    
+        pyglet.clock.get_default().set_fps_limit(60)
+
     def on_draw(self):
         texture = self.createTexture()
 
@@ -15,7 +17,7 @@ class GlManager(pyglet.window.Window):
         pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, 
                                   pyglet.gl.GL_TEXTURE_MAG_FILTER, 
                                   pyglet.gl.GL_NEAREST)
-        
+
         # Scale the sprite to the window size
         texture.width = self.width
         texture.height = self.height
@@ -38,6 +40,8 @@ class GlManager(pyglet.window.Window):
         return image_data.get_texture()
 
     def on_key_press(self, symbol, modifiers):
+        if symbol == key.ESCAPE:
+            exit(0)
         try:
             self.processor.key[self.key_map[symbol]] = True
         except KeyError:
@@ -52,13 +56,12 @@ class GlManager(pyglet.window.Window):
     def processor_cycle(self, dt):
         # Since the minimum timer resolution is 1/60 we have to perform
         # (dt * frequency) cycles.
-        cycle_deficit = int(dt * 600)
+        clock_frequency = 500
+        cycle_deficit = int(dt * clock_frequency)
         for _ in range(cycle_deficit):
             self.processor.execute_cycle()
+        self.processor.timer_tick()
 
-        # Check to ensure processor integrity
-        # if not self.processor.check_integrity():
-        #     print("Failed integrity check!")
 
 def initialize_graphics(processor, width=640, height=320):
     # Creates the game state and window using pygame.
