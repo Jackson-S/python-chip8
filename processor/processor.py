@@ -1,17 +1,17 @@
 from .opcode_class import Opcode
 
 class Processor():
-    def __init__(self, display):
+    def __init__(self, display, memory_size):
         self.register = [0 for _ in range(0x10)]
         self.key = [False for _ in range(0x10)]
 
         # The raw memory for the processor.
-        self.memory = [0 for _ in range(0x1000)]
+        self.memory = [0 for _ in range(memory_size)]
         
         # Contains opcode objects with pre-decoded instruction pointers 
         # and parameters, avoiding unnecessary decoding and acting as a
         # pseudo-dynamic re-compiler.
-        self.program_memory = [None for _ in range(0x1000)]
+        self.program_memory = [None for _ in range(memory_size)]
 
         # Not quite standard behavior as the original stack only has 16 positions
         # however the programs cannot directly access the stack so having infinite
@@ -45,6 +45,6 @@ class Processor():
         # Check if there's an Opcode object already created
         if self.program_memory[self.program_counter] == None:
             self.program_memory[self.program_counter] = Opcode(self, self.program_counter)
-
+        
         # Run the object
         self.program_memory[self.program_counter].run()

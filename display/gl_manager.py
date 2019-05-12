@@ -4,9 +4,10 @@ from pyglet.window import key
 from .keyboard_layout import KEY_MAP
 
 class GlManager(pyglet.window.Window):
-    def __init__(self, processor, *args, **kwargs):
+    def __init__(self, processor, frequency, *args, **kwargs):
         self.processor = processor
         self.key_map = KEY_MAP
+        self.frequency = frequency
         super(GlManager, self).__init__(*args, **kwargs)
         pyglet.clock.get_default().set_fps_limit(60)
 
@@ -56,17 +57,16 @@ class GlManager(pyglet.window.Window):
     def processor_cycle(self, dt):
         # Since the minimum timer resolution is 1/60 we have to perform
         # (dt * frequency) cycles.
-        clock_frequency = 500
-        cycle_deficit = int(dt * clock_frequency)
+        cycle_deficit = int(dt * self.frequency)
         for _ in range(cycle_deficit):
             self.processor.execute_cycle()
         self.processor.timer_tick()
 
 
-def initialize_graphics(processor, width=640, height=320):
+def initialize_graphics(processor, speed, width=640, height=320):
     # Creates the game state and window using pygame.
-    window = GlManager(processor, width=width, height=height)
+    window = GlManager(processor, speed, width=width, height=height)
     # Schedule the processor to run at 600hz (slightly higher than standard, 
     # but makes maths and timing code much easier)
-    pyglet.clock.schedule_interval(window.processor_cycle, 1/600)
+    pyglet.clock.schedule_interval(window.processor_cycle, 1/500)
     pyglet.app.run()
