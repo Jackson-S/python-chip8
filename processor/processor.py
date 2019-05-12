@@ -45,30 +45,6 @@ class Processor():
         # Check if there's an Opcode object already created
         if self.program_memory[self.program_counter] == None:
             self.program_memory[self.program_counter] = Opcode(self, self.program_counter)
-        
+
         # Run the object
         self.program_memory[self.program_counter].run()
-    
-    def check_integrity(self):
-        for index, r in enumerate(self.register):
-            if r > 255 or r < 0:
-                print("Register ({}) range error: {}".format(index, r))
-                exit(-1)
-                return False
-        for m in self.memory:
-            if m < 0 or m > 255:
-                print("Register value error: ", m)
-                return False
-        for p in self.display:
-            if type(p) != bool:
-                print("Pixel type error: ", type(p))
-                return False
-        for s in self.stack:
-            if type(s) != int:
-                print("stack type error")
-                return False
-        if type(self.immediate) != int:
-            print("Immediate type error")
-            return False
-        return True
-        
