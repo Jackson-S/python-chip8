@@ -39,7 +39,7 @@ class Opcode():
         "e*9e": op_skip_if_key_pressed,
         "e*a1": op_skip_if_key_not_pressed,
         "f*07": op_set_register_to_delay_timer,
-        "F*0a": op_halt_until_key_pressed,
+        "f*0a": op_halt_until_key_pressed,
         "f*15": op_set_delay_timer_to_register,
         "f*18": op_set_sound_timer_to_register,
         "f*1e": op_add_register_to_immediate,
@@ -49,26 +49,38 @@ class Opcode():
         "f*65": op_load_registers_from_memory,
     }
 
+    OPT_OPCODES = {op_skip_if_register_equal_constant: op_skip_if_register_equal_constant_optimized, 
+                   op_skip_if_register_not_equal_constant: op_skip_if_register_not_equal_constant_optimized, 
+                   op_skip_if_register_equal_register: op_skip_if_register_equal_register_optimized, 
+                   op_skip_if_register_not_equal_register: op_skip_if_register_not_equal_register_optimized}
+
     def __init__(self, processor, address):
         self.processor = processor
         self.address = address
         self.opcode = self._join(address)
         self.function, self.parameters = self.get_function_call(self.opcode)
+        self.check_for_optimizations()
+    
+    def __repr__(self):
+        return "{}({})".format(self.function.__name__[3:], ", ".join(map(str, self.parameters)))
     
     def _join(self, address):
         return self.processor.memory[address] << 8 | self.processor.memory[address+1]
     
     def run(self):
-        # Check code has not been modified by running program
-        if self._join(self.address) != self.opcode:
-            # If the program is self-modifying then recreate the opcode before running
-            print("Self-modifying code detected.")
-            self.processor[self.address] = Opcode(self.processor, self.address)
-            self.processor[self.address].run()
-            return
-        
+        # Check code has not been modified by running program        
         self.function(self.processor, *self.parameters)
+    
+    def check_for_optimizations(self):
+        next_opcode = self._join(self.address + 2)
 
+        if self.function in self.OPT_OPCODES.keys():
+            if next_opcode & 0xF000 == 0x1000 or next_opcode & 0xF000 == 0x2000:
+                self.function = self.OPT_OPCODES[self.function]
+                self.parameters.append(next_opcode & 0xFFF)
+                # Parameter defining if we should add the last address to the stack
+                self.parameters.append(next_opcode & 0xF000 == 0x2000)
+                
     def get_function_call(self, opcode):
         hex_opcode = "{:04x}".format(opcode)
         
@@ -77,7 +89,7 @@ class Opcode():
         parameters = []
 
         # Create a list of possible opcode->self.FUNCTION_POINTERS.keys() mappings
-        possible_opcode_mappings = [hex_opcode, 
+        possible_opcode_mappings = [hex_opcode,
                                     "{}*{}".format(hex_opcode[0], hex_opcode[2:]), 
                                     "{}**{}".format(hex_opcode[0], hex_opcode[3]),
                                     "{}***".format(hex_opcode[0])]
@@ -104,15 +116,15 @@ class Opcode():
             # Replace the parameters with "*" and then get the function call from the dictionary
             function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[3]]
             
-            if hex_opcode[0] in ("1", "2", "a", "b"):
+            if hex_opcode[0] in {"1", "2", "a", "b"}:
                 # Opcode like (*AAA), return the last 3 hex-values as a single parameter.
                 parameters = [int(hex_opcode[1:], 16)]
             
-            elif hex_opcode[0] in ("3", "4", "6", "7", "c"):
+            elif hex_opcode[0] in {"3", "4", "6", "7", "c"}:
                 # Opcode like (*ABB), return 2nd digit as one parameter, and 3,4 digits as 1 parameter.
                 parameters = [int(hex_opcode[1], 16), int(hex_opcode[2:], 16)]
             
-            elif hex_opcode[0] in ("d"):
+            elif hex_opcode[0] == "d":
                 # Opcode like (*ABC), return each digit after first as separate parameter.
                 parameters = [*map(lambda x: int(x, 16), hex_opcode[1:])]
 
