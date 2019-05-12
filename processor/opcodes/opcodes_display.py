@@ -1,7 +1,7 @@
 def op_display_clear(processor, *args):
     processor.display.clear()
-    processor.display.draw_screen = True
     processor.program_counter += 2
+
 
 def op_draw(processor, *args):
     x_origin = processor.register[args[0]] % 64
@@ -20,18 +20,15 @@ def op_draw(processor, *args):
             sprite_bits = map(lambda x: bool(sprite_line & (1 << x)), reversed(range(8)))
 
             for sprite_x, pixel in enumerate(sprite_bits):
-                if (x_origin + sprite_x < 64):
-                    # Add the original x and y positions to the current sprite x, y
-                    position = (x_origin + sprite_x, y_origin + sprite_y)
+                # Add the original x and y positions to the current sprite x, y
+                position = (x_origin + sprite_x, y_origin + sprite_y)
 
-                    old_pixel = processor.display[position]
-                    new_pixel = pixel ^ old_pixel
-                    processor.display[position] = new_pixel
+                old_pixel = processor.display[position]
+                if old_pixel != None:
+                    processor.display[position] ^= pixel
 
-                    # Set the 0xF (flag) register if a pixel is unset.
-                    if old_pixel == True and new_pixel == False:
-                        processor.register[0xF] = 1
+                # Set the 0xF (flag) register if a pixel is unset.
+                if old_pixel == True and pixel == False:
+                    processor.register[0xF] = 1
     
-    # Mark that the screen should be updated.
-    processor.display.draw_screen = True
     processor.program_counter += 2
