@@ -23,11 +23,9 @@ def op_dump_registers_to_memory(processor, *args):
     for i in range(args[0] + 1):
         processor.program_memory[processor.immediate + i] = None
         processor.memory[processor.immediate + i] = processor.register[i]
-    processor.immediate += args[0] + 1
     processor.program_counter += 2
 
 def op_load_registers_from_memory(processor, *args):
     for i in range(args[0] + 1):
        processor.register[i] = processor.memory[processor.immediate + i]
-    processor.immediate += args[0] + 1
     processor.program_counter += 2
