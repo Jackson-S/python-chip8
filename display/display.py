@@ -23,7 +23,7 @@ class Display():
     
     def __iter__(self):
         index = 0
-        while index < self._length:
+        while index < len(self):
             yield self._display[index]
             index += 1
     
