@@ -61,12 +61,3 @@ class GlManager(pyglet.window.Window):
         for _ in range(cycle_deficit):
             self.processor.execute_cycle()
         self.processor.timer_tick()
-
-
-def initialize_graphics(processor, speed, width=640, height=320):
-    # Creates the game state and window using pygame.
-    window = GlManager(processor, speed, width=width, height=height)
-    # Schedule the processor to run at 600hz (slightly higher than standard, 
-    # but makes maths and timing code much easier)
-    pyglet.clock.schedule_interval(window.processor_cycle, 1/500)
-    pyglet.app.run()
