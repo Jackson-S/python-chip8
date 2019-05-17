@@ -1,10 +1,11 @@
-from .opcodes.opcodes_flow import *
-from .opcodes.opcodes_conditional import *
-from .opcodes.opcodes_display import *
-from .opcodes.opcodes_maths import *
-from .opcodes.opcodes_memory import *
-from .opcodes.opcodes_delay import *
-from .opcodes.opcodes_input import *
+from processor.opcodes.opcodes_flow import *
+from processor.opcodes.opcodes_conditional import *
+from processor.opcodes.opcodes_display import *
+from processor.opcodes.opcodes_maths import *
+from processor.opcodes.opcodes_memory import *
+from processor.opcodes.opcodes_delay import *
+from processor.opcodes.opcodes_input import *
+
 
 class Opcode():
     """ The Opcode class acts as a container for the instruction, if the opcode
@@ -21,9 +22,9 @@ class Opcode():
         "4***": op_skip_if_register_not_equal_constant,
         "5**0": op_skip_if_register_equal_register,
         "6***": op_assign_constant_to_register,
-        "7***": op_add_constant_to_register, 
+        "7***": op_add_constant_to_register,
         "8**0": op_assign_register_to_register,
-        "8**1": op_or_register_to_register, 
+        "8**1": op_or_register_to_register,
         "8**2": op_and_register_to_register,
         "8**3": op_xor_register_to_register,
         "8**4": op_add_register_to_register,
@@ -49,86 +50,92 @@ class Opcode():
         "f*65": op_load_registers_from_memory,
     }
 
-    OPT_OPCODES = {op_skip_if_register_equal_constant: op_skip_if_register_equal_constant_optimized, 
-                   op_skip_if_register_not_equal_constant: op_skip_if_register_not_equal_constant_optimized, 
-                   op_skip_if_register_equal_register: op_skip_if_register_equal_register_optimized, 
-                   op_skip_if_register_not_equal_register: op_skip_if_register_not_equal_register_optimized}
+    OPT_OPCODES = {
+        op_skip_if_register_equal_constant: op_skip_if_register_equal_constant_optimized,
+        op_skip_if_register_not_equal_constant: op_skip_if_register_not_equal_constant_optimized,
+        op_skip_if_register_equal_register: op_skip_if_register_equal_register_optimized,
+        op_skip_if_register_not_equal_register: op_skip_if_register_not_equal_register_optimized
+    }
 
-    def __init__(self, processor, address):
+    def __init__(self, processor, address: int):
         self.processor = processor
         self.address = address
         self.opcode = self._join(address)
         self.function, self.parameters = self.get_function_call(self.opcode)
         self.check_for_optimizations()
-    
+
     def __repr__(self):
         return "{}({})".format(self.function.__name__[3:], ", ".join(map(str, self.parameters)))
-    
-    def _join(self, address):
-        return self.processor.memory[address] << 8 | self.processor.memory[address+1]
-    
-    def run(self):
-        # Check code has not been modified by running program        
-        self.function(self.processor, *self.parameters)
-    
-    def check_for_optimizations(self):
-        next_opcode = self._join(self.address + 2)
 
+    def _join(self, address: int):
+        """ Joins two 8-bit memory locations into a 16-bit value. """
+        return self.processor.memory[address] << 8 | self.processor.memory[address+1]
+
+    def run(self):
+        """ Runs the opcode that this object represents. """
+        # Check code has not been modified by running program
+        self.function(self.processor, *self.parameters)
+
+    def check_for_optimizations(self):
+        """ Check for the ability to optimize the opcode (e.g. by chaining multiple jumps). """
+        next_opcode = self._join(self.address + 2)
         if self.function in self.OPT_OPCODES.keys():
             if next_opcode & 0xF000 == 0x1000 or next_opcode & 0xF000 == 0x2000:
                 self.function = self.OPT_OPCODES[self.function]
                 self.parameters.append(next_opcode & 0xFFF)
                 # Parameter defining if we should add the last address to the stack
                 self.parameters.append(next_opcode & 0xF000 == 0x2000)
-                
-    def get_function_call(self, opcode):
+
+    def get_function_call(self, opcode: int):
+        """ Convert a 16-bit opcode into a function pointer and set of parameters. """
         hex_opcode = "{:04x}".format(opcode)
-        
+
         # Set up a default return type (no-op)
         function_call = op_nop
         parameters = []
 
         # Create a list of possible opcode->self.FUNCTION_POINTERS.keys() mappings
         possible_opcode_mappings = [hex_opcode,
-                                    "{}*{}".format(hex_opcode[0], hex_opcode[2:]), 
+                                    "{}*{}".format(hex_opcode[0], hex_opcode[2:]),
                                     "{}**{}".format(hex_opcode[0], hex_opcode[3]),
                                     "{}***".format(hex_opcode[0])]
 
         if possible_opcode_mappings[0] in self.FUNCTION_POINTERS.keys():
             # Matches for functions with no parameters (00E0 - clear and 00EE - return)
             function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[0]]
-        
+
         elif possible_opcode_mappings[1] in self.FUNCTION_POINTERS.keys():
             # Replace the parameters with "*" and then get the function call from the dictionary
             function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[1]]
 
             # Retrieve the parameter as a base-16 integer
             parameters = [int(hex_opcode[1], 16)]
-        
+
         elif possible_opcode_mappings[2] in self.FUNCTION_POINTERS.keys():
             # Replace the parameters with "*" and then get the function call from the dictionary
             function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[2]]
 
             # Get the parameters from the opcode into a list
             parameters = [*map(lambda x: int(x, 16), hex_opcode[1:3])]
-        
+
         elif possible_opcode_mappings[3] in self.FUNCTION_POINTERS.keys():
             # Replace the parameters with "*" and then get the function call from the dictionary
             function_call = self.FUNCTION_POINTERS[possible_opcode_mappings[3]]
-            
+
             if hex_opcode[0] in {"1", "2", "a", "b"}:
                 # Opcode like (*AAA), return the last 3 hex-values as a single parameter.
                 parameters = [int(hex_opcode[1:], 16)]
-            
+
             elif hex_opcode[0] in {"3", "4", "6", "7", "c"}:
-                # Opcode like (*ABB), return 2nd digit as one parameter, and 3,4 digits as 1 parameter.
+                # Opcode like (*ABB), return 2nd digit as one parameter,
+                # and 3,4 digits as 1 parameter.
                 parameters = [int(hex_opcode[1], 16), int(hex_opcode[2:], 16)]
-            
+
             elif hex_opcode[0] == "d":
                 # Opcode like (*ABC), return each digit after first as separate parameter.
                 parameters = [*map(lambda x: int(x, 16), hex_opcode[1:])]
 
-        if function_call == op_nop:
+        if function_call is op_nop:
             print("NOP Generated from unknown instruction ({:04x})".format(opcode))
 
         # Return the resulting opcode
