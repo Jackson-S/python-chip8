@@ -1,6 +1,6 @@
 from processor.processor import Processor
 from display.display import Display
-from display.graphics_init import initialize_graphics
+from display.window_init import initialize_windows
 
 import argparse
 
@@ -31,4 +31,4 @@ with open(arguments.game, "rb") as game_file:
   game = game_file.read()
   processor.load_game(game)
 
-initialize_graphics(processor, arguments.speed, debug=arguments.debug)
+initialize_windows(processor, arguments.speed, debug=arguments.debug)

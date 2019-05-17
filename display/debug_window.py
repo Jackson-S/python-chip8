@@ -1,9 +1,9 @@
 import pyglet
 
-class DebugDisplay(pyglet.window.Window):
+class DebugWindow(pyglet.window.Window):
     def __init__(self, processor, *args, **kwargs):
         self.processor = processor
-        super(DebugDisplay, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def on_draw(self):
         texture = self.createTexture()
